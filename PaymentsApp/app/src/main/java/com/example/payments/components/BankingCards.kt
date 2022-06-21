@@ -1,26 +1,20 @@
 package com.example.payments.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Image
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,6 +35,8 @@ fun BankingCards(viewModel: CardPaymentsViewModel) {
     } else {
         if (viewModel.response.value.data != null) {
             DisplayCreditAndDebitListsComponent(debitCards, creditCards)
+            //debitCards?.get(0)
+            //  ?.let { DisplayCardPaymentComponent(bankingCard = it, isDebit = true, 144.dp) }
         } else {
             // Display Error Screen
         }
@@ -64,44 +60,39 @@ fun DisplayCreditAndDebitListsComponent(
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                DisplayDebitLists(debitCards)
-                DisplayCreditLists(creditCards)
+                DisplayPaymentsLists(debitCards, true)
+                DisplayPaymentsLists(creditCards, false)
             }
         }
     }
 }
 
 @Composable
-private fun DisplayCreditLists(creditCards: MutableList<BankingCard>?) {
-    ListHeader("Cards")
-    Divider(color = Color.LightGray)
-    Column(
-    ) {
-        creditCards?.forEach { creditCard ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ShowBankingIcon(false, 24.dp)
-                ShowBankingCard(creditCard, false)
-            }
-            Divider(color = Color.LightGray)
-        }
-    }
-}
+private fun DisplayPaymentsLists(paymentCards: MutableList<BankingCard>?, isDebit: Boolean) {
 
-@Composable
-private fun DisplayDebitLists(debitCards: MutableList<BankingCard>?) {
-    Divider(color = Color.LightGray)
-    ListHeader("Bank Accounts")
-    Divider(color = Color.LightGray)
+    if(isDebit) {
+        Divider(color = Color.LightGray)
+        ListHeader("Bank Accounts")
+        Divider(color = Color.LightGray)
+    }else{
+        ListHeader("Cards")
+        Divider(color = Color.LightGray)
+    }
+
     Column(
     ) {
-        debitCards?.forEach { debitCard ->
+        paymentCards?.forEach { paymentCard ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 12.dp),
             ) {
-                ShowBankingIcon(true, 24.dp)
-                ShowBankingCard(debitCard, true)
+                if(isDebit) {
+                    ShowBankingIcon(true, 24.dp)
+                    ShowBankingCard(paymentCard, true)
+                }else{
+                    ShowBankingIcon(false, 24.dp)
+                    ShowBankingCard(paymentCard, false)
+                }
             }
             Divider(color = Color.LightGray)
         }
@@ -112,9 +103,14 @@ private fun DisplayDebitLists(debitCards: MutableList<BankingCard>?) {
 fun ShowBankingIcon(isDebit: Boolean, imageSize: Dp) {
     Card(
         modifier = Modifier.size(imageSize),
+        elevation = 0.dp
     ) {
         Icon(
-            if(isDebit) { painterResource(R.drawable.bank) } else { painterResource(R.drawable.credit)} ,
+            if (isDebit) {
+                painterResource(R.drawable.bank)
+            } else {
+                painterResource(R.drawable.credit)
+            },
             contentDescription = "",
             modifier = Modifier.fillMaxSize(),
             tint = Color(0xFF0288d1),
@@ -128,8 +124,8 @@ fun ShowBankingCard(bankingCard: BankingCard, isDebit: Boolean) {
         modifier = Modifier
             .fillMaxWidth(),
         backgroundColor = Color.White,
-
-        ) {
+        elevation = 0.dp
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -142,8 +138,12 @@ fun ShowBankingCard(bankingCard: BankingCard, isDebit: Boolean) {
                     .padding(top = 4.dp)
             )
             Text(
-                text = if (isDebit) { "Bank Account: ACH - Same Day" } else { "Card: Instant" },
-                    fontSize = 12.sp, modifier = Modifier
+                text = if (isDebit) {
+                    "Bank Account: ACH - Same Day"
+                } else {
+                    "Card: Instant"
+                },
+                fontSize = 12.sp, modifier = Modifier
                     .alpha(0.50f)
                     .padding(top = 4.dp)
             )
@@ -183,3 +183,63 @@ fun ListHeader(title: String) {
         )
     }
 }
+
+
+@Composable
+fun DisplayCardPaymentComponent(bankingCard: BankingCard, isDebit: Boolean, imageSize: Dp) {
+    Scaffold(topBar = {
+        AppBar(
+            title = "DETAILS",
+            icon = Icons.Default.ArrowBack
+        )
+    }) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFFEDEDED)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Card(
+                    modifier = Modifier.size(imageSize),
+                    backgroundColor = Color(0xFFEDEDED),
+                    elevation = 0.dp
+                ) {
+                    Icon(
+                        if (isDebit) {
+                            painterResource(R.drawable.bank_large)
+                        } else {
+                            painterResource(R.drawable.credit_large)
+                        },
+                        contentDescription = "",
+                        modifier = Modifier.fillMaxSize(),
+                        tint = Color(0xFF0288d1),
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = bankingCard.account_name,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = bankingCard.desc, fontSize = 12.sp, modifier = Modifier
+                            .alpha(0.85f)
+                            .padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+
