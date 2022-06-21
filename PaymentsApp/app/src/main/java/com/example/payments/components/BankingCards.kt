@@ -72,9 +72,6 @@ fun PaymentApplication(
                         navController
                     )
                 }
-            //UserProfileDetailsScreen(navBackStackEntry.arguments!!.getInt("userId"), navController)
-//            debitCards?.get(0)
-//              ?.let { DisplayCardPaymentComponent(bankingCard = it, isDebit = true, 144.dp, navController) }
         }
     }
 }
