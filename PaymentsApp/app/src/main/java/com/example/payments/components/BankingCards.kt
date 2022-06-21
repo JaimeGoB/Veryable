@@ -17,15 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.payments.R
 import com.example.payments.model.BankingCard
 import com.example.payments.screens.cardpayments.CardPaymentsViewModel
@@ -89,7 +88,7 @@ fun DisplayCreditAndDebitListsComponent(
     Scaffold(topBar = {
         AppBar(
             title = "ACCOUNTS",
-            icon = Icons.Default.Home
+            icon = Icons.Default.Home,
         ) {
 
         }
@@ -248,7 +247,7 @@ fun DisplayCardPaymentComponent(
         topBar = {
             AppBar(
                 title = "DETAILS",
-                icon = Icons.Default.ArrowBack
+                icon = Icons.Default.ArrowBack,
             ) {
                 navController?.navigateUp()
             }
@@ -258,49 +257,91 @@ fun DisplayCardPaymentComponent(
             modifier = Modifier.fillMaxSize(),
             color = Color(0xFFEDEDED)
         ) {
+            PaymentDetails(imageSize, isDebit, bankingCard)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.Bottom
             ) {
-                Card(
-                    modifier = Modifier.size(imageSize),
-                    backgroundColor = Color(0xFFEDEDED),
-                    elevation = 0.dp
-                ) {
-                    Icon(
-                        if (isDebit) {
-                            painterResource(R.drawable.bank_large)
-                        } else {
-                            painterResource(R.drawable.credit_large)
-                        },
-                        contentDescription = "",
-                        modifier = Modifier.fillMaxSize(),
-                        tint = Color(0xFF0288d1),
-                    )
+                ButtonWithColor(navController) {
+                    navController?.navigateUp()
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (bankingCard != null) {
-                        Text(
-                            text = bankingCard.account_name,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    if (bankingCard != null) {
-                        Text(
-                            text = bankingCard.desc, fontSize = 12.sp, modifier = Modifier
-                                .alpha(0.85f)
-                                .padding(top = 4.dp)
-                        )
-                    }
-                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ButtonWithColor(navController: NavHostController, clickAction: () -> Unit) {
+    Button(
+        onClick = {
+            clickAction.invoke()
+        },
+        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF0288d1))
+    )
+
+    {
+
+        Text(
+            text = "DONE",
+            fontSize = 16.sp,
+            color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun PaymentDetails(
+    imageSize: Dp,
+    isDebit: Boolean,
+    bankingCard: BankingCard
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Card(
+            modifier = Modifier.size(imageSize),
+            backgroundColor = Color(0xFFEDEDED),
+            elevation = 0.dp
+        ) {
+            Icon(
+                if (isDebit) {
+                    painterResource(R.drawable.bank_large)
+                } else {
+                    painterResource(R.drawable.credit_large)
+                },
+                contentDescription = "",
+                modifier = Modifier.fillMaxSize(),
+                tint = Color(0xFF0288d1),
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (bankingCard != null) {
+                Text(
+                    text = bankingCard.account_name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (bankingCard != null) {
+                Text(
+                    text = bankingCard.desc, fontSize = 12.sp, modifier = Modifier
+                        .alpha(0.85f)
+                        .padding(top = 4.dp)
+                )
             }
         }
     }
