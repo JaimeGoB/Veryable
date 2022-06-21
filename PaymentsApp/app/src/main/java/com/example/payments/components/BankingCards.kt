@@ -1,6 +1,7 @@
 package com.example.payments.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.payments.R
 import com.example.payments.model.BankingCard
 import com.example.payments.screens.cardpayments.CardPaymentsViewModel
@@ -34,7 +41,8 @@ fun BankingCards(viewModel: CardPaymentsViewModel) {
         CircularProgressIndicator()
     } else {
         if (viewModel.response.value.data != null) {
-            DisplayCreditAndDebitListsComponent(debitCards, creditCards)
+            PaymentApplication(debitCards, creditCards)
+            // DisplayCreditAndDebitListsComponent(debitCards, creditCards)
             //debitCards?.get(0)
             //  ?.let { DisplayCardPaymentComponent(bankingCard = it, isDebit = true, 144.dp) }
         } else {
@@ -44,15 +52,47 @@ fun BankingCards(viewModel: CardPaymentsViewModel) {
 }
 
 @Composable
-fun DisplayCreditAndDebitListsComponent(
+fun PaymentApplication(
     debitCards: MutableList<BankingCard>?,
     creditCards: MutableList<BankingCard>?
+) {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "payment_card_list") {
+        composable("payment_card_list") {
+            DisplayCreditAndDebitListsComponent(debitCards, creditCards, navController)
+        }
+        composable(
+            route = "payment_card_details",
+        ) { navBackStackEntry ->
+            debitCards?.get(0)
+                ?.let {
+                    DisplayCardPaymentComponent(
+                        bankingCard = it,
+                        isDebit = true,
+                        144.dp,
+                        navController
+                    )
+                }
+            //UserProfileDetailsScreen(navBackStackEntry.arguments!!.getInt("userId"), navController)
+//            debitCards?.get(0)
+//              ?.let { DisplayCardPaymentComponent(bankingCard = it, isDebit = true, 144.dp, navController) }
+        }
+    }
+}
+
+@Composable
+fun DisplayCreditAndDebitListsComponent(
+    debitCards: MutableList<BankingCard>?,
+    creditCards: MutableList<BankingCard>?,
+    navController: NavHostController
 ) {
     Scaffold(topBar = {
         AppBar(
             title = "ACCOUNTS",
             icon = Icons.Default.Home
-        )
+        ) {
+
+        }
     }) {
         Surface(
             modifier = Modifier.fillMaxSize()
@@ -60,21 +100,25 @@ fun DisplayCreditAndDebitListsComponent(
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                DisplayPaymentsLists(debitCards, true)
-                DisplayPaymentsLists(creditCards, false)
+                DisplayPaymentsLists(debitCards, true, navController)
+                DisplayPaymentsLists(creditCards, false, navController)
             }
         }
     }
 }
 
 @Composable
-private fun DisplayPaymentsLists(paymentCards: MutableList<BankingCard>?, isDebit: Boolean) {
+private fun DisplayPaymentsLists(
+    paymentCards: MutableList<BankingCard>?,
+    isDebit: Boolean,
+    navController: NavHostController
+) {
 
-    if(isDebit) {
+    if (isDebit) {
         Divider(color = Color.LightGray)
         ListHeader("Bank Accounts")
         Divider(color = Color.LightGray)
-    }else{
+    } else {
         ListHeader("Cards")
         Divider(color = Color.LightGray)
     }
@@ -86,12 +130,16 @@ private fun DisplayPaymentsLists(paymentCards: MutableList<BankingCard>?, isDebi
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 12.dp),
             ) {
-                if(isDebit) {
+                if (isDebit) {
                     ShowBankingIcon(true, 24.dp)
-                    ShowBankingCard(paymentCard, true)
-                }else{
+                    ShowBankingCard(paymentCard, true) {
+                        navController?.navigate("payment_card_details")
+                    }
+                } else {
                     ShowBankingIcon(false, 24.dp)
-                    ShowBankingCard(paymentCard, false)
+                    ShowBankingCard(paymentCard, false) {
+                        navController?.navigate("payment_card_details")
+                    }
                 }
             }
             Divider(color = Color.LightGray)
@@ -119,10 +167,11 @@ fun ShowBankingIcon(isDebit: Boolean, imageSize: Dp) {
 }
 
 @Composable
-fun ShowBankingCard(bankingCard: BankingCard, isDebit: Boolean) {
+fun ShowBankingCard(bankingCard: BankingCard, isDebit: Boolean, clickAction: () -> Unit) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClick = { clickAction.invoke() }),
         backgroundColor = Color.White,
         elevation = 0.dp
     ) {
@@ -152,12 +201,14 @@ fun ShowBankingCard(bankingCard: BankingCard, isDebit: Boolean) {
 }
 
 @Composable
-fun AppBar(title: String, icon: ImageVector) {
+fun AppBar(title: String, icon: ImageVector, iconClickAction: () -> Unit) {
     TopAppBar(
         navigationIcon = {
             Icon(
                 imageVector = icon,
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier
+                    .padding(12.dp)
+                    .clickable(onClick = { iconClickAction.invoke() }),
                 contentDescription = "Icon"
             )
         },
@@ -186,13 +237,23 @@ fun ListHeader(title: String) {
 
 
 @Composable
-fun DisplayCardPaymentComponent(bankingCard: BankingCard, isDebit: Boolean, imageSize: Dp) {
-    Scaffold(topBar = {
-        AppBar(
-            title = "DETAILS",
-            icon = Icons.Default.ArrowBack
-        )
-    }) {
+fun DisplayCardPaymentComponent(
+    bankingCard: BankingCard,
+    isDebit: Boolean,
+    imageSize: Dp,
+    navController: NavHostController
+) {
+
+    Scaffold(
+        topBar = {
+            AppBar(
+                title = "DETAILS",
+                icon = Icons.Default.ArrowBack
+            ) {
+                navController?.navigateUp()
+            }
+        }
+    ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = Color(0xFFEDEDED)
@@ -225,16 +286,20 @@ fun DisplayCardPaymentComponent(bankingCard: BankingCard, isDebit: Boolean, imag
                         .padding(top = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = bankingCard.account_name,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = bankingCard.desc, fontSize = 12.sp, modifier = Modifier
-                            .alpha(0.85f)
-                            .padding(top = 4.dp)
-                    )
+                    if (bankingCard != null) {
+                        Text(
+                            text = bankingCard.account_name,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (bankingCard != null) {
+                        Text(
+                            text = bankingCard.desc, fontSize = 12.sp, modifier = Modifier
+                                .alpha(0.85f)
+                                .padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         }
